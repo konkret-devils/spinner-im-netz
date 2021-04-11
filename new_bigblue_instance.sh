@@ -4,11 +4,15 @@ SPINNER_ROOT_DIR="/opt/konkret-spinner/"
 SPINNER_TEMPLATES_DIR="${SPINNER_ROOT_DIR}templates/"
 SPINNER_CONF_FILE="${SPINNER_ROOT_DIR}.env"
 
-#parse & eval config file .env:
+#parse & eval config file .env: <<
 
 source "${SPINNER_CONF_FILE}"
 
-#interrim ... should use getopt (not getopt*s*): <<
+#...>
+
+#interrim ... should use getopt (not getopt*s*), also for additional variables,
+#or initializer config file should be source'd on top,
+#shadowing the default values in .env config file: <<
 
 INSTANCE_NAME="${1}"
 
@@ -16,17 +20,17 @@ INSTANCE_NAME="${1}"
 
 INSTANCE_URL="https://${SPINNER_FQDN}/${INSTANCE_NAME}/"
 
-#if first run...: <<
+#on first run, spinner base directories will probably need to be created...: <<
 
 if [ ! -d "${NGINX_CONF_DIR}" ]; then
   mkdir -p "${NGINX_CONF_DIR}"
 fi
 
-#...>>
-
 if [ ! -d "${BIGBLUE_ROOT_DIR}" ]; then
   mkdir -p "${BIGBLUE_ROOT_DIR}"
 fi
+
+#...>>
 
 #determine next available port numbers for new instance's containers (gl and db): <<
 
@@ -91,7 +95,7 @@ git pull -a
 
 #...>>
 
-#copy/renew assets from web locations:
+#copy/renew assets from web locations: <<
 
 INSTANCE_TARGET_PUBLIC_DIR="${INSTANCE_TARGET_DIR}public/"
 if [ ! -d "${INSTANCE_TARGET_PUBLIC_DIR}" ]; then
@@ -125,6 +129,8 @@ wget -q "${INSTANCE_LOGO_IMAGE_URL_ORIG}"
 wget -q "${INSTANCE_LOGO_WITH_TEXT_IMAGE_URL_ORIG}"
 wget -q "${INSTANCE_LOGO_EMAIL_IMAGE_URL_ORIG}"
 wget -q "${INSTANCE_DEFAULT_PRESENTATION_URL_ORIG}"
+
+#...>>
 
 #generate config files from templates and the values we determined above: <<
 
@@ -172,17 +178,22 @@ cat "${TEMPLATES_DIR}tmpl.env" \
     | sed "s/{{ SPINNER_ISHARE_BASE_URL }}/${SPINNER_ISHARE_BASE_URL}/g" \
     | sed "s/{{ INSTANCE_MCU_PREFIX }}/${INSTANCE_MCU_PREFIX}/g" \
     | sed "s/{{ INSTANCE_MCU_MOD_PREFIX }}/${INSTANCE_MCU_MOD_PREFIX}/g" \
-    #TODO ergaenzen: INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE , INSTANCE_LOGO_IMAGE_URL ,
-    #                (INSTANCE_LOGO_WITH_TEXT_IMAGE_URL ,) INSTANCE_LOGO_EMAIL_IMAGE_URL ,
-    #                INSTANCE_DEFAULT_PRESENTATION_URL
+    | sed "s/{{ INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE }}/${INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE}/g" \
+    | sed "s/{{ INSTANCE_LOGO_IMAGE_URL }}/${INSTANCE_LOGO_IMAGE_URL}/g" \
+    | sed "s/{{ INSTANCE_LOGO_IMAGE_EMAIL_URL }}/${INSTANCE_LOGO_IMAGE_EMAIL_URL}/g" \
+    | sed "s/{{ INSTANCE_DEFAULT_PRESENTATION_URL }}/${INSTANCE_DEFAULT_PRESENTATION_URL}/g" \
     > "${ENV_FILE_NAME}"
+
+cat "${TEMPLATES_DIR}assets/stylesheets/_variables.tmpl.scss" \
+    | sed "s/{{ INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE }}/${INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE}/g" \
+    | sed "s/{{ INSTANCE_LOGO_IMAGE_URL }}/${INSTANCE_LOGO_IMAGE_URL}/g" \
+    | sed "s/{{ INSTANCE_LOGO_WITH_TEXT_IMAGE_URL }}/${INSTANCE_LOGO_WITH_TEXT_IMAGE_URL}/g" \
+    > "${VARIABLES_SCSS_FILE_NAME}"
 
 cat "${TEMPLATES_DIR}tmpl.nginx.conf" \
     | sed "s/{{ INSTANCE_NAME }}/${INSTANCE_NAME}/g" \
     | sed "s/{{ INSTANCE_PORT }}/${INSTANCE_PORT}/g" \
     > "${NGINX_CONF_FILE_NAME}"
-
-#TODO process _variables.tmpl.scss template
 
 #...>>
 
