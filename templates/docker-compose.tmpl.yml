@@ -3,12 +3,12 @@ version: '3'
 services:
   app:
     entrypoint: [bin/start]
-    image: konkret-devils/konkret-bigblue:KONKRETBBBRANCH
-    container_name: bigblue-INSTANCENAME
+    image: konkret-devils/konkret-bigblue:{{ KONKRET_BIGBLUE_BRANCH }}
+    container_name: bigblue-{{ INSTANCE_NAME }}
     env_file: .env
     restart: unless-stopped
     ports:
-      - 127.0.0.1:INSTANCEPORT:80
+      - 127.0.0.1:{{ INSTANCE_PORT }}:80
 # When using external logging
 #    logging:
 #      driver: $LOG_DRIVER
@@ -24,13 +24,13 @@ services:
     links:
       - db
   db:
-    image: postgres:POSTGRESRELEASE
+    image: postgres:{{ POSTGRES_RELEASE }}
     restart: unless-stopped
     ports:
-      - 127.0.0.1:INSTANCEDBPORT:5432
+      - 127.0.0.1:{{ INSTANCE_DB_PORT }}:5432
     volumes:
       - ./db/production:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=INSTANCEDBPASSWORD
+      - POSTGRES_PASSWORD={{ INSTANCE_DB_PASSWORD }}
