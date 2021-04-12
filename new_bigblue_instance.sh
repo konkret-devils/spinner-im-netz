@@ -4,8 +4,12 @@ SPINNER_ROOT_DIR="/opt/konkret-spinner/"
 SPINNER_TEMPLATES_DIR="${SPINNER_ROOT_DIR}templates/"
 SPINNER_CONF_FILE="${SPINNER_ROOT_DIR}.env"
 
+echo "*** konkret spinner ***"
+echo ""
+
 #parse & eval config file .env: <<
 
+echo " - reading .env file"
 source "${SPINNER_CONF_FILE}"
 
 #...>
@@ -15,25 +19,34 @@ source "${SPINNER_CONF_FILE}"
 #shadowing the default values in .env config file: <<
 
 INSTANCE_NAME="${1}"
+ADMIN_NAME="${2}"
+ADMIN_EMAIL="${3}"
+ADMIN_PASSWORD="${4}"
+WITH_NEELZ_LAYER_SUPPORT="${5}"
+INSTANCE_MCU_PREFIX="${6}"
 
 #...>>
 
 INSTANCE_URL="https://${SPINNER_FQDN}/${INSTANCE_NAME}/"
+echo " ~ instance URL -> ${INSTANCE_URL}"
 
 #on first run, spinner base directories will probably need to be created...: <<
 
 if [ ! -d "${NGINX_CONF_DIR}" ]; then
   mkdir -p "${NGINX_CONF_DIR}"
+  echo " - created nginx conf directory for spinner (Is this your first run...?) -> ${NGINX_CONF_DIR}"
 fi
 
 if [ ! -d "${BIGBLUE_ROOT_DIR}" ]; then
   mkdir -p "${BIGBLUE_ROOT_DIR}"
+  echo " - created root directory for spinner's bigBLUE instance containers (Is this your first run...?) -> ${BIGBLUE_ROOT_DIR}"
 fi
 
 #...>>
 
 #determine next available port numbers for new instance's containers (gl and db): <<
 
+echo " - determine (next) available port numbers for new instance's containers"
 if [ $(find "${NGINX_CONF_DIR}" -name *.nginx.conf -printf "%f\n" | wc -l) -gt 0 ]; then
 
   if [ $(find "${NGINX_CONF_DIR}" -regex ".*\/[0-9][0-9][0-9][0-9][0-9]*_[0-9][0-9][0-9][0-9][0-9]*_${INSTANCE_NAME}\.nginx\.conf" | wc -l) -gt 0 ]; then
@@ -42,6 +55,8 @@ if [ $(find "${NGINX_CONF_DIR}" -name *.nginx.conf -printf "%f\n" | wc -l) -gt 0
 
     INSTANCE_PORT=$(echo "${CONF_FILE_NAME}" | sed 's/.*\/\([0-9][0-9][0-9][0-9][0-9]*\)_[0-9][0-9][0-9][0-9][0-9]*_.*$/\1/g')
     INSTANCE_DB_PORT=$(echo "${CONF_FILE_NAME}" | sed 's/.*\/[0-9][0-9][0-9][0-9][0-9]*_\([0-9][0-9][0-9][0-9][0-9]*\)_.*$/\1/g')
+
+    echo " ~ continue using the previous ports (instance already exists and will merely be rebuilt)"
 
   else
 
@@ -60,6 +75,8 @@ if [ $(find "${NGINX_CONF_DIR}" -name *.nginx.conf -printf "%f\n" | wc -l) -gt 0
     INSTANCE_PORT="${NEXT_GL_PORT}"
     INSTANCE_DB_PORT="${NEXT_DB_PORT}"
 
+    echo " ~ allocated a pair of free ports for this instance..."
+
   fi
 
 else
@@ -68,6 +85,7 @@ else
   INSTANCE_DB_PORT=5447
 
 fi
+echo " ~ :: mainContainer:PORT=${INSTANCE_PORT} / postgresDBContainer:PORT=${INSTANCE_DB_PORT}"
 
 # ...>>
 
@@ -85,11 +103,13 @@ VARIABLES_SCSS_FILE_NAME="${INSTANCE_TARGET_DIR}app/assets/stylesheets/utilities
 
 if [ ! -d "${INSTANCE_TARGET_DIR}" ]; then
 
+  echo " - cloning branch ${KONKRET_BIGBLUE_BRANCH} from ${KONKRET_BIGBLUE_REPOSITORY_URL}"
   cd "${BIGBLUE_ROOT_DIR}"
   git clone --branch "${KONKRET_BIGBLUE_BRANCH}" "${KONKRET_BIGBLUE_REPOSITORY_URL}" "${INSTANCE_NAME}"
 
 fi
 
+echo " - doing a <git pull -a> from repository"
 cd "${INSTANCE_TARGET_DIR}"
 git pull -a
 
@@ -100,10 +120,10 @@ git pull -a
 INSTANCE_TARGET_PUBLIC_DIR="${INSTANCE_TARGET_DIR}public/"
 if [ ! -d "${INSTANCE_TARGET_PUBLIC_DIR}" ]; then
   mkdir -p "${INSTANCE_TARGET_PUBLIC_DIR}"
+  echo " ~ needed to create <public> folder (Is this your first run?)"
 fi
 
 REGEX_FILENAME_ONLY="s/^.*\/\(.*\..*\)$/\1/g"
-
 cd "${INSTANCE_TARGET_PUBLIC_DIR}"
 
 HTML5_CLIENT_CSS_FILE_NAME=$(echo "${INSTANCE_HTML5_CLIENT_CSS_URL_ORIG}" | sed "${REGEX_FILENAME_ONLY}");
@@ -113,22 +133,34 @@ LOGO_FILE_NAME=$(echo "${INSTANCE_LOGO_IMAGE_URL_ORIG}" | sed "${REGEX_FILENAME_
 LOGO_WITH_TEXT_FILE_NAME=$(echo "${INSTANCE_LOGO_WITH_TEXT_IMAGE_URL_ORIG}" | sed "${REGEX_FILENAME_ONLY}");
 LOGO_EMAIL_FILE_NAME=$(echo "${INSTANCE_LOGO_EMAIL_IMAGE_URL_ORIG}" | sed "${REGEX_FILENAME_ONLY}");
 DEFAULT_PRESENTATION_FILE_NAME=$(echo "${INSTANCE_DEFAULT_PRESENTATION_URL_ORIG}" | sed "${REGEX_FILENAME_ONLY}");
+FAVICON_FILE_NAME=$(echo "${INSTANCE_FAVICON_URL_ORIG}" | sed "${REGEX_FILENAME_ONLY}");
 
+echo " - emptying <public> folder (will be rebuilt)"
 rm -f "./${HTML5_CLIENT_CSS_FILE_NAME}" \
       "./${HTML5_CLIENT_LOGO_FILE_NAME}" \
       "./${BACKGROUND_IMAGE_LANDING_PAGE_FILE_NAME}" \
       "./${LOGO_FILE_NAME}" \
       "./${LOGO_WITH_TEXT_FILE_NAME}" \
       "./${LOGO_EMAIL_FILE_NAME}" \
-      "./${DEFAULT_PRESENTATION_FILE_NAME}"
+      "./${DEFAULT_PRESENTATION_FILE_NAME}" \
+      "./${FAVICON_FILE_NAME}"
 
+echo " - wget ${INSTANCE_HTML5_CLIENT_CSS_URL_ORIG}"
 wget -q "${INSTANCE_HTML5_CLIENT_CSS_URL_ORIG}"
+echo " - wget ${INSTANCE_HTML5_CLIENT_LOGO_IMAGE_URL_ORIG}"
 wget -q "${INSTANCE_HTML5_CLIENT_LOGO_IMAGE_URL_ORIG}"
+echo " - wget ${INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE_ORIG}"
 wget -q "${INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE_ORIG}"
+echo " - wget ${INSTANCE_LOGO_IMAGE_URL_ORIG}"
 wget -q "${INSTANCE_LOGO_IMAGE_URL_ORIG}"
+echo " - wget ${INSTANCE_LOGO_WITH_TEXT_IMAGE_URL_ORIG}"
 wget -q "${INSTANCE_LOGO_WITH_TEXT_IMAGE_URL_ORIG}"
+echo " - wget ${INSTANCE_LOGO_EMAIL_IMAGE_URL_ORIG}"
 wget -q "${INSTANCE_LOGO_EMAIL_IMAGE_URL_ORIG}"
+echo " - wget ${INSTANCE_DEFAULT_PRESENTATION_URL_ORIG}"
 wget -q "${INSTANCE_DEFAULT_PRESENTATION_URL_ORIG}"
+echo " - wget ${INSTANCE_FAVICON_URL_ORIG}"
+wget -q "${INSTANCE_FAVICON_URL_ORIG}"
 
 #...>>
 
@@ -144,19 +176,49 @@ INSTANCE_DEFAULT_PRESENTATION_URL="${INSTANCE_URL}${DEFAULT_PRESENTATION_FILE_NA
 
 INSTANCE_DB_PASSWORD=$(openssl rand -hex 16)
 
-INSTANCE_MCU_PREFIX=$(openssl rand -hex 8)
+INSTANCE_MCU_PREFIX="${INSTANCE_MCU_PREFIX}"
 INSTANCE_MCU_MOD_PREFIX=$(openssl rand -hex 8)
+MCU_PREFIX_LEN=${#INSTANCE_MCU_PREFIX}
+if [ "${MCU_PREFIX_LEN}" -lt 5 ]; then
+  echo " ~ MCU_PREFIX not passed or it is too short."
+  INSTANCE_MCU_PREFIX=$(openssl rand -hex 8)
+  echo " ~ Magic Cap User (MCU) prefix is now: ${INSTANCE_MCU_PREFIX}"
+fi
 
+INSTANCE_CONTAINER_NAME="bigblue-${INSTANCE_NAME}"
+INSTANCE_RELEASE_NAME="release-v2"
+
+echo " - assembling ${DOCKER_COMPOSE_YML_FILE_NAME}"
 cat "${TEMPLATES_DIR}docker-compose.tmpl.yml" \
-    | sed "s/{{ KONKRET_BIGBLUE_BRANCH }}/${KONKRET_BIGBLUE_BRANCH}/g" \
-    | sed "s/{{ INSTANCE_NAME }}/${INSTANCE_NAME}/g" \
+    | sed "s/{{ INSTANCE_CONTAINER_NAME }}/${INSTANCE_CONTAINER_NAME}/g" \
+    | sed "s/{{ INSTANCE_RELEASE_NAME }}/${INSTANCE_RELEASE_NAME}/g" \
     | sed "s/{{ INSTANCE_PORT }}/${INSTANCE_PORT}/g" \
     | sed "s/{{ INSTANCE_DB_PORT }}/${INSTANCE_DB_PORT}/g" \
     | sed "s/{{ POSTGRES_RELEASE }}/${POSTGRES_RELEASE}/g" \
     | sed "s/{{ INSTANCE_DB_PASSWORD }}/${INSTANCE_DB_PASSWORD}/g" \
     > "${DOCKER_COMPOSE_YML_FILE_NAME}"
 
+#build container:
+
+echo " - First container build and launch"
+cd "${INSTANCE_TARGET_DIR}"
+docker-compose down
+./scripts/image_build.sh "${INSTANCE_CONTAINER_NAME}" "${INSTANCE_RELEASE_NAME}"
+echo " - Bringing containers up ..."
+docker-compose up -d
+
+#wait a while for containers being ready:
+echo " ~ sleep for 20 seconds, please stand by, as this is intented"
+sleep 20
+echo " ~ okay. 20 seconds have passed by..."
+
+#handle secret key base
+echo " - handling SECRET_KEY_BASE affairs ..."
+INSTANCE_SECRET_KEY_BASE=$(docker run --rm "${INSTANCE_CONTAINER_NAME}:${INSTANCE_RELEASE_NAME}" bundle exec rake secret)
+
+echo " - assembling ${ENV_FILE_NAME}"
 cat "${TEMPLATES_DIR}tmpl.env" \
+    | sed "s/{{ INSTANCE_SECRET_KEY_BASE }}/${INSTANCE_SECRET_KEY_BASE}/g" \
     | sed "s/{{ INSTANCE_NAME }}/${INSTANCE_NAME}/g" \
     | sed "s/{{ INSTANCE_NAME_PREFIX }}/${INSTANCE_NAME_PREFIX}/g" \
     | sed "s/{{ SPINNER_FQDN }}/${SPINNER_FQDN}/g" \
@@ -184,17 +246,46 @@ cat "${TEMPLATES_DIR}tmpl.env" \
     | sed "s/{{ INSTANCE_DEFAULT_PRESENTATION_URL }}/${INSTANCE_DEFAULT_PRESENTATION_URL}/g" \
     > "${ENV_FILE_NAME}"
 
+echo " - assembling ${VARIABLES_SCSS_FILE_NAME}"
 cat "${TEMPLATES_DIR}assets/stylesheets/_variables.tmpl.scss" \
     | sed "s/{{ INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE }}/${INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE}/g" \
     | sed "s/{{ INSTANCE_LOGO_IMAGE_URL }}/${INSTANCE_LOGO_IMAGE_URL}/g" \
     | sed "s/{{ INSTANCE_LOGO_WITH_TEXT_IMAGE_URL }}/${INSTANCE_LOGO_WITH_TEXT_IMAGE_URL}/g" \
     > "${VARIABLES_SCSS_FILE_NAME}"
 
+# rebuild container
+echo " - stop, rebuild and restart containers..."
+cd "${INSTANCE_TARGET_DIR}"
+docker-compose down
+./scripts/image_build.sh "${INSTANCE_CONTAINER_NAME}" "${INSTANCE_RELEASE_NAME}"
+docker-compose up -d
+
+# nginx configuration
+echo " ~ NGINX configuration..."
+echo " - assembling ${NGINX_CONF_FILE_NAME}"
 cat "${TEMPLATES_DIR}tmpl.nginx.conf" \
     | sed "s/{{ INSTANCE_NAME }}/${INSTANCE_NAME}/g" \
     | sed "s/{{ INSTANCE_PORT }}/${INSTANCE_PORT}/g" \
     > "${NGINX_CONF_FILE_NAME}"
 
+echo " - reloading nginx"
+systemctl reload nginx
+
 #...>>
 
-#TODO ...
+# setup initial users: ...<<
+echo " ~ Initializing first user(s) for new instance"
+# 1. admin
+echo " - admin :: ${ADMIN_NAME} <${ADMIN_EMAIL}> and PW: ${ADMIN_PASSWORD}"
+docker exec greenlight-v2 bundle exec rake user:create["${ADMIN_NAME}","${ADMIN_EMAIL}","${ADMIN_PASSWORD}","admin"]
+
+# 2. neelz user if desired
+if [ "${WITH_NEELZ_LAYER_SUPPORT}" = "true" ]; then
+  NEELZ_USER_NAME="°°${INSTANCE_NAME}°(neelZ)°°"
+  NEELZ_USER_PASSWORD=$(openssl rand -hex 16)
+  echo " - neelZ User :: ${NEELZ_USER_NAME} <${SPINNER_NEELZ_EMAIL}> and PW: ${NEELZ_USER_PASSWORD}"
+  docker exec greenlight-v2 bundle exec rake user:create[,"${SPINNER_NEELZ_EMAIL}","${NEELZ_USER_PASSWORD}"]
+fi
+# ...>
+echo " ~~~ I'm done for instance <${INSTANCE_NAME}>. Bye :)"
+echo " ***"
