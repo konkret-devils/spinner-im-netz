@@ -298,15 +298,15 @@ function rebuild_restart_containers {
   echo " - Bringing containers up ..."
   docker-compose up -d
 
+  #wait a while for containers being ready:
+  echo " ~ sleep for 20 seconds, please stand by, as this is intented"
+  sleep 20
+  echo " ~ okay. 20 seconds have passed by..."
+
 }
 
 echo " - First container built and launch"
 rebuild_restart_containers
-
-#wait a while for containers being ready:
-echo " ~ sleep for 20 seconds, please stand by, as this is intented"
-sleep 20
-echo " ~ okay. 20 seconds have passed by..."
 
 #handle secret key base
 echo " - handling SECRET_KEY_BASE affairs ..."
