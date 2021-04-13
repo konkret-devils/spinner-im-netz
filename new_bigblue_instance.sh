@@ -93,7 +93,7 @@ echo " ~ :: mainContainer:PORT=${INSTANCE_PORT} / postgresDBContainer:PORT=${INS
 
 TEMPLATE_DOCKER_COMPOSE_YML_FILE_NAME="${SPINNER_TEMPLATES_DIR}docker-compose.tmpl.yml"
 TEMPLATE_ENV_FILE_NAME="${SPINNER_TEMPLATES_DIR}tmpl.env"
-TEMPLATE_VARIABLES_SCSS_FILE_NAME="${SPINNER_TEMPLATES_DIR}"
+TEMPLATE_VARIABLES_SCSS_FILE_NAME="${SPINNER_TEMPLATES_DIR}assets/stylesheets/_variables.tmpl.scss"
 TEMPLATE_NGINX_CONF_FILE_NAME="${SPINNER_TEMPLATES_DIR}tmpl.nginx.conf"
 
 INSTANCE_TARGET_DIR="${BIGBLUE_ROOT_DIR}${INSTANCE_NAME}/"
@@ -339,7 +339,7 @@ if [ "${WITH_NEELZ_LAYER_SUPPORT}" = "true" ]; then
   NEELZ_USER_NAME="°°${INSTANCE_NAME}°(neelZ)°°"
   NEELZ_USER_PASSWORD=$(openssl rand -hex 16)
   echo " - neelZ User :: ${NEELZ_USER_NAME} <${SPINNER_NEELZ_EMAIL}> and PW: ${NEELZ_USER_PASSWORD}"
-  docker exec "${INSTANCE_CONTAINER_NAME}" bundle exec rake user:create[,"${SPINNER_NEELZ_EMAIL}","${NEELZ_USER_PASSWORD}"]
+  docker exec "${INSTANCE_CONTAINER_NAME}" bundle exec rake user:create["${NEELZ_USER_NAME}","${SPINNER_NEELZ_EMAIL}","${NEELZ_USER_PASSWORD}"]
 fi
 # ...>
 echo " ~~~ I'm done for instance <${INSTANCE_NAME}>. Bye :)"
