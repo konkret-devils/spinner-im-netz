@@ -189,7 +189,7 @@ INSTANCE_CONTAINER_NAME="bigblue-${INSTANCE_NAME}"
 INSTANCE_RELEASE_NAME="release-v2"
 
 echo " - assembling ${DOCKER_COMPOSE_YML_FILE_NAME}"
-cat "${TEMPLATES_DIR}docker-compose.tmpl.yml" \
+cat "${SPINNER_TEMPLATES_DIR}docker-compose.tmpl.yml" \
     | sed "s/{{ INSTANCE_CONTAINER_NAME }}/${INSTANCE_CONTAINER_NAME}/g" \
     | sed "s/{{ INSTANCE_RELEASE_NAME }}/${INSTANCE_RELEASE_NAME}/g" \
     | sed "s/{{ INSTANCE_PORT }}/${INSTANCE_PORT}/g" \
@@ -217,7 +217,7 @@ echo " - handling SECRET_KEY_BASE affairs ..."
 INSTANCE_SECRET_KEY_BASE=$(docker run --rm "${INSTANCE_CONTAINER_NAME}:${INSTANCE_RELEASE_NAME}" bundle exec rake secret)
 
 echo " - assembling ${ENV_FILE_NAME}"
-cat "${TEMPLATES_DIR}tmpl.env" \
+cat "${SPINNER_TEMPLATES_DIR}tmpl.env" \
     | sed "s/{{ INSTANCE_SECRET_KEY_BASE }}/${INSTANCE_SECRET_KEY_BASE}/g" \
     | sed "s/{{ INSTANCE_NAME }}/${INSTANCE_NAME}/g" \
     | sed "s/{{ INSTANCE_NAME_PREFIX }}/${INSTANCE_NAME_PREFIX}/g" \
@@ -247,7 +247,7 @@ cat "${TEMPLATES_DIR}tmpl.env" \
     > "${ENV_FILE_NAME}"
 
 echo " - assembling ${VARIABLES_SCSS_FILE_NAME}"
-cat "${TEMPLATES_DIR}assets/stylesheets/_variables.tmpl.scss" \
+cat "${SPINNER_TEMPLATES_DIR}assets/stylesheets/_variables.tmpl.scss" \
     | sed "s/{{ INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE }}/${INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE}/g" \
     | sed "s/{{ INSTANCE_LOGO_IMAGE_URL }}/${INSTANCE_LOGO_IMAGE_URL}/g" \
     | sed "s/{{ INSTANCE_LOGO_WITH_TEXT_IMAGE_URL }}/${INSTANCE_LOGO_WITH_TEXT_IMAGE_URL}/g" \
@@ -263,7 +263,7 @@ docker-compose up -d
 # nginx configuration
 echo " ~ NGINX configuration..."
 echo " - assembling ${NGINX_CONF_FILE_NAME}"
-cat "${TEMPLATES_DIR}tmpl.nginx.conf" \
+cat "${SPINNER_TEMPLATES_DIR}tmpl.nginx.conf" \
     | sed "s/{{ INSTANCE_NAME }}/${INSTANCE_NAME}/g" \
     | sed "s/{{ INSTANCE_PORT }}/${INSTANCE_PORT}/g" \
     > "${NGINX_CONF_FILE_NAME}"
