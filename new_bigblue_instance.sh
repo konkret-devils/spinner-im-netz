@@ -277,14 +277,14 @@ systemctl reload nginx
 echo " ~ Initializing first user(s) for new instance"
 # 1. admin
 echo " - admin :: ${ADMIN_NAME} <${ADMIN_EMAIL}> and PW: ${ADMIN_PASSWORD}"
-docker exec greenlight-v2 bundle exec rake user:create["${ADMIN_NAME}","${ADMIN_EMAIL}","${ADMIN_PASSWORD}","admin"]
+docker exec "${INSTANCE_CONTAINER_NAME}" bundle exec rake user:create["${ADMIN_NAME}","${ADMIN_EMAIL}","${ADMIN_PASSWORD}","admin"]
 
 # 2. neelz user if desired
 if [ "${WITH_NEELZ_LAYER_SUPPORT}" = "true" ]; then
   NEELZ_USER_NAME="°°${INSTANCE_NAME}°(neelZ)°°"
   NEELZ_USER_PASSWORD=$(openssl rand -hex 16)
   echo " - neelZ User :: ${NEELZ_USER_NAME} <${SPINNER_NEELZ_EMAIL}> and PW: ${NEELZ_USER_PASSWORD}"
-  docker exec greenlight-v2 bundle exec rake user:create[,"${SPINNER_NEELZ_EMAIL}","${NEELZ_USER_PASSWORD}"]
+  docker exec "${INSTANCE_CONTAINER_NAME}" bundle exec rake user:create[,"${SPINNER_NEELZ_EMAIL}","${NEELZ_USER_PASSWORD}"]
 fi
 # ...>
 echo " ~~~ I'm done for instance <${INSTANCE_NAME}>. Bye :)"
