@@ -329,6 +329,21 @@ systemctl reload nginx
 #...>>
 
 # setup initial users: ...<<
+
+cd "${INSTANCE_TARGET_DIR}"
+
+# weirdly, database migrations seem to be made only upon a further container restart
+sleep 5
+docker-compose down
+echo " ~ sleep for 10 seconds, please stand by, as this is intented"
+sleep 10
+echo " ~ okay. 10 seconds have passed by..."
+docker-compose up -d
+#wait a while for containers being ready:
+echo " ~ sleep for 30 seconds, please stand by, as this is intented"
+sleep 30
+echo " ~ okay. 30 seconds have passed by..."
+
 echo " ~ Initializing first user(s) for new instance"
 # 1. admin
 echo " - admin :: ${ADMIN_NAME} <${ADMIN_EMAIL}> and PW: ${ADMIN_PASSWORD}"
