@@ -60,13 +60,13 @@ if [ $(find "${NGINX_CONF_DIR}" -name *.nginx.conf -printf "%f\n" | wc -l) -gt 0
 
   else
 
-    MAX_USED_GL_PORT=$(ls -l "${NGINX_CONF_DIR}*.nginx.conf" | tail -n 1 | awk '{print $NF}' | sed 's/^\([0-9][0-9][0-9][0-9][0-9]*\)_.*$/\1/g')
+    MAX_USED_GL_PORT=$(ls -l "${NGINX_CONF_DIR}"*.nginx.conf | tail -n 1 | awk '{print $NF}' | sed 's/^\([0-9][0-9][0-9][0-9][0-9]*\)_.*$/\1/g')
     NEXT_GL_PORT=$(expr "${MAX_USED_GL_PORT}" + 1)
     while [ $(netstat -ntlpu | cut -f4 | grep ":${NEXT_GL_PORT}" | wc -l) -gt 0 ]; do
       NEXT_GL_PORT=$(expr "${NEXT_GL_PORT}" + 1)
     done
 
-    MAX_USED_DB_PORT=$(ls -l "${NGINX_CONF_DIR}*.nginx.conf" | tail -n 1 | awk '{print $NF}' | sed 's/^[0-9][0-9][0-9][0-9][0-9]*_\([0-9][0-9][0-9][0-9][0-9]*\)_.*$/\1/g')
+    MAX_USED_DB_PORT=$(ls -l "${NGINX_CONF_DIR}"*.nginx.conf | tail -n 1 | awk '{print $NF}' | sed 's/^[0-9][0-9][0-9][0-9][0-9]*_\([0-9][0-9][0-9][0-9][0-9]*\)_.*$/\1/g')
     NEXT_DB_PORT=$(expr "${MAX_USED_DB_PORT}" + 1)
     while [ $(netstat -ntlpu | cut -f4 | grep ":${NEXT_DB_PORT}" | wc -l) -gt 0 ]; do
       NEXT_DB_PORT=$(expr "${NEXT_DB_PORT}" + 1)
