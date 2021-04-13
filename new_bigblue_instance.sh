@@ -91,11 +91,106 @@ echo " ~ :: mainContainer:PORT=${INSTANCE_PORT} / postgresDBContainer:PORT=${INS
 
 #prerequisites for template processing: <<
 
+TEMPLATE_DOCKER_COMPOSE_YML_FILE_NAME="${SPINNER_TEMPLATES_DIR}docker-compose.tmpl.yml"
+TEMPLATE_ENV_FILE_NAME="${SPINNER_TEMPLATES_DIR}tmpl.env"
+TEMPLATE_VARIABLES_SCSS_FILE_NAME="${SPINNER_TEMPLATES_DIR}"
+TEMPLATE_NGINX_CONF_FILE_NAME="${SPINNER_TEMPLATES_DIR}tmpl.nginx.conf"
+
 INSTANCE_TARGET_DIR="${BIGBLUE_ROOT_DIR}${INSTANCE_NAME}/"
 DOCKER_COMPOSE_YML_FILE_NAME="${INSTANCE_TARGET_DIR}docker-compose.yml"
 ENV_FILE_NAME="${INSTANCE_TARGET_DIR}.env"
+SAMPLE_ENV_FILE_NAME="${INSTANCE_TARGET_DIR}sample.env"
 NGINX_CONF_FILE_NAME="${NGINX_CONF_DIR}${INSTANCE_PORT}_${INSTANCE_DB_PORT}_${INSTANCE_NAME}.nginx.conf"
 VARIABLES_SCSS_FILE_NAME="${INSTANCE_TARGET_DIR}app/assets/stylesheets/utilities/_variables.scss";
+
+# sed expression for escaping slashes
+SEDEX_ESCAPE_SLASHES="s/\//\\\\\//g"
+
+# assembling - functions:
+
+function assemble_docker_compose_yml_file {
+
+  echo " - assembling ${DOCKER_COMPOSE_YML_FILE_NAME}"
+
+  cat "${TEMPLATE_DOCKER_COMPOSE_YML_FILE_NAME}" \
+      | sed "s/{{ INSTANCE_CONTAINER_NAME }}/${INSTANCE_CONTAINER_NAME}/g" \
+      | sed "s/{{ INSTANCE_RELEASE_NAME }}/${INSTANCE_RELEASE_NAME}/g" \
+      | sed "s/{{ INSTANCE_PORT }}/${INSTANCE_PORT}/g" \
+      | sed "s/{{ INSTANCE_DB_PORT }}/${INSTANCE_DB_PORT}/g" \
+      | sed "s/{{ POSTGRES_RELEASE }}/${POSTGRES_RELEASE}/g" \
+      | sed "s/{{ INSTANCE_DB_PASSWORD }}/${INSTANCE_DB_PASSWORD}/g" \
+      > "${DOCKER_COMPOSE_YML_FILE_NAME}"
+
+}
+
+function assemble_env_file {
+
+  local secret_key_base=$(echo "${INSTANCE_SECRET_KEY_BASE}" | sed $SEDEX_ESCAPE_SLASHES)
+  local instance_name=$(echo "${INSTANCE_NAME}" | sed $SEDEX_ESCAPE_SLASHES)
+  local instance_name_prefix=$(echo "${INSTANCE_NAME_PREFIX}" | sed $SEDEX_ESCAPE_SLASHES)
+  local bbb_secret=$(echo "${SPINNER_BBB_SECRET}" | sed $SEDEX_ESCAPE_SLASHES)
+  local smtp_password=$(echo "${INSTANCE_SMTP_PASSWORD}" | sed $SEDEX_ESCAPE_SLASHES)
+  local smtp_sender_name=$(echo "${INSTANCE_SMTP_SENDER_NAME}" | sed $SEDEX_ESCAPE_SLASHES)
+  local neelz_email_password=$(echo "${SPINNER_NEELZ_EMAIL_PASSWORD}" | sed $SEDEX_ESCAPE_SLASHES)
+  local ishare_base_url=$(echo "${SPINNER_ISHARE_BASE_URL}" | sed $SEDEX_ESCAPE_SLASHES)
+  local mcu_prefix=$(echo "${INSTANCE_MCU_PREFIX}" | sed $SEDEX_ESCAPE_SLASHES)
+  local mcu_mod_prefix=$(echo "${INSTANCE_MCU_MOD_PREFIX}" | sed $SEDEX_ESCAPE_SLASHES)
+
+  echo " - assembling ${ENV_FILE_NAME}"
+
+  cat "${TEMPLATE_ENV_FILE_NAME}" \
+      | sed "s/{{ INSTANCE_SECRET_KEY_BASE }}/${secret_key_base}/g" \
+      | sed "s/{{ INSTANCE_NAME }}/${instance_name}/g" \
+      | sed "s/{{ INSTANCE_NAME_PREFIX }}/${instance_name_prefix}/g" \
+      | sed "s/{{ SPINNER_FQDN }}/${SPINNER_FQDN}/g" \
+      | sed "s/{{ SPINNER_BBB_FQDN }}/${SPINNER_BBB_FQDN}/g" \
+      | sed "s/{{ SPINNER_BBB_SECRET }}/${bbb_secret}/g" \
+      | sed "s/{{ INSTANCE_DB_PASSWORD }}/${INSTANCE_DB_PASSWORD}/g" \
+      | sed "s/{{ INSTANCE_SMTP_SERVER }}/${INSTANCE_SMTP_SERVER}/g" \
+      | sed "s/{{ INSTANCE_SMTP_PORT }}/${INSTANCE_SMTP_PORT}/g" \
+      | sed "s/{{ INSTANCE_SMTP_DOMAIN }}/${INSTANCE_SMTP_DOMAIN}/g" \
+      | sed "s/{{ INSTANCE_SMTP_USERNAME }}/${INSTANCE_SMTP_USERNAME}/g" \
+      | sed "s/{{ INSTANCE_SMTP_PASSWORD }}/${smtp_password}/g" \
+      | sed "s/{{ INSTANCE_SMTP_STARTTLS_AUTO }}/${INSTANCE_SMTP_STARTTLS_AUTO}/g" \
+      | sed "s/{{ INSTANCE_SMTP_SENDER_NAME }}/${smtp_sender_name}/g" \
+      | sed "s/{{ INSTANCE_SMTP_SENDER_ADDRESS }}/${INSTANCE_SMTP_SENDER_ADDRESS}/g" \
+      | sed "s/{{ INSTANCE_HTML5_CLIENT_CSS_URL }}/${INSTANCE_HTML5_CLIENT_CSS_URL}/g" \
+      | sed "s/{{ INSTANCE_HTML5_CLIENT_LOGO_IMAGE_URL }}/${INSTANCE_HTML5_CLIENT_LOGO_IMAGE_URL}/g" \
+      | sed "s/{{ SPINNER_NEELZ_EMAIL }}/${SPINNER_NEELZ_EMAIL}/g" \
+      | sed "s/{{ SPINNER_NEELZ_EMAIL_PASSWORD }}/${neelz_email_password}/g" \
+      | sed "s/{{ SPINNER_ISHARE_BASE_URL }}/${ishare_base_url}/g" \
+      | sed "s/{{ INSTANCE_MCU_PREFIX }}/${mcu_prefix}/g" \
+      | sed "s/{{ INSTANCE_MCU_MOD_PREFIX }}/${mcu_mod_prefix}/g" \
+      | sed "s/{{ INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE }}/${INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE}/g" \
+      | sed "s/{{ INSTANCE_LOGO_IMAGE_URL }}/${INSTANCE_LOGO_IMAGE_URL}/g" \
+      | sed "s/{{ INSTANCE_LOGO_IMAGE_EMAIL_URL }}/${INSTANCE_LOGO_IMAGE_EMAIL_URL}/g" \
+      | sed "s/{{ INSTANCE_DEFAULT_PRESENTATION_URL }}/${INSTANCE_DEFAULT_PRESENTATION_URL}/g" \
+      > "${ENV_FILE_NAME}"
+
+}
+
+function assemble_variables_scss_file {
+
+  echo " - assembling ${VARIABLES_SCSS_FILE_NAME}"
+
+  cat "${TEMPLATE_VARIABLES_SCSS_FILE_NAME}" \
+      | sed "s/{{ INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE }}/${INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE}/g" \
+      | sed "s/{{ INSTANCE_LOGO_IMAGE_URL }}/${INSTANCE_LOGO_IMAGE_URL}/g" \
+      | sed "s/{{ INSTANCE_LOGO_WITH_TEXT_IMAGE_URL }}/${INSTANCE_LOGO_WITH_TEXT_IMAGE_URL}/g" \
+      > "${VARIABLES_SCSS_FILE_NAME}"
+
+}
+
+function assemble_nginx_conf_file {
+
+  echo " - assembling ${NGINX_CONF_FILE_NAME}"
+
+  cat "${TEMPLATE_NGINX_CONF_FILE_NAME}" \
+      | sed "s/{{ INSTANCE_NAME }}/${INSTANCE_NAME}/g" \
+      | sed "s/{{ INSTANCE_PORT }}/${INSTANCE_PORT}/g" \
+      > "${NGINX_CONF_FILE_NAME}"
+
+}
 
 #...>>
 
@@ -166,13 +261,15 @@ wget -q "${INSTANCE_FAVICON_URL_ORIG}"
 
 #generate config files from templates and the values we determined above: <<
 
-INSTANCE_HTML5_CLIENT_CSS_URL="${INSTANCE_URL}${HTML5_CLIENT_CSS_FILE_NAME}"
-INSTANCE_HTML5_CLIENT_LOGO_IMAGE_URL="${INSTANCE_URL}${HTML5_CLIENT_LOGO_FILE_NAME}"
-INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE="${INSTANCE_URL}${BACKGROUND_IMAGE_LANDING_PAGE_FILE_NAME}"
-INSTANCE_LOGO_IMAGE_URL="${INSTANCE_URL}${LOGO_FILE_NAME}"
-INSTANCE_LOGO_WITH_TEXT_IMAGE_URL="${INSTANCE_URL}${LOGO_WITH_TEXT_FILE_NAME}"
-INSTANCE_LOGO_EMAIL_IMAGE_URL="${INSTANCE_URL}${LOGO_EMAIL_FILE_NAME}"
-INSTANCE_DEFAULT_PRESENTATION_URL="${INSTANCE_URL}${DEFAULT_PRESENTATION_FILE_NAME}"
+INSTANCE_URL_ESCAPED=$(echo "${INSTANCE_URL}" | sed $SEDEX_ESCAPE_SLASHES)
+
+INSTANCE_HTML5_CLIENT_CSS_URL="${INSTANCE_URL_ESCAPED}${HTML5_CLIENT_CSS_FILE_NAME}"
+INSTANCE_HTML5_CLIENT_LOGO_IMAGE_URL="${INSTANCE_URL_ESCAPED}${HTML5_CLIENT_LOGO_FILE_NAME}"
+INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE="${INSTANCE_URL_ESCAPED}${BACKGROUND_IMAGE_LANDING_PAGE_FILE_NAME}"
+INSTANCE_LOGO_IMAGE_URL="${INSTANCE_URL_ESCAPED}${LOGO_FILE_NAME}"
+INSTANCE_LOGO_WITH_TEXT_IMAGE_URL="${INSTANCE_URL_ESCAPED}${LOGO_WITH_TEXT_FILE_NAME}"
+INSTANCE_LOGO_EMAIL_IMAGE_URL="${INSTANCE_URL_ESCAPED}${LOGO_EMAIL_FILE_NAME}"
+INSTANCE_DEFAULT_PRESENTATION_URL="${INSTANCE_URL_ESCAPED}${DEFAULT_PRESENTATION_FILE_NAME}"
 
 INSTANCE_DB_PASSWORD=$(openssl rand -hex 16)
 
@@ -188,24 +285,23 @@ fi
 INSTANCE_CONTAINER_NAME="bigblue-${INSTANCE_NAME}"
 INSTANCE_RELEASE_NAME="release-v2"
 
-echo " - assembling ${DOCKER_COMPOSE_YML_FILE_NAME}"
-cat "${SPINNER_TEMPLATES_DIR}docker-compose.tmpl.yml" \
-    | sed "s/{{ INSTANCE_CONTAINER_NAME }}/${INSTANCE_CONTAINER_NAME}/g" \
-    | sed "s/{{ INSTANCE_RELEASE_NAME }}/${INSTANCE_RELEASE_NAME}/g" \
-    | sed "s/{{ INSTANCE_PORT }}/${INSTANCE_PORT}/g" \
-    | sed "s/{{ INSTANCE_DB_PORT }}/${INSTANCE_DB_PORT}/g" \
-    | sed "s/{{ POSTGRES_RELEASE }}/${POSTGRES_RELEASE}/g" \
-    | sed "s/{{ INSTANCE_DB_PASSWORD }}/${INSTANCE_DB_PASSWORD}/g" \
-    > "${DOCKER_COMPOSE_YML_FILE_NAME}"
+assemble_docker_compose_yml_file
+assemble_env_file
 
 #build container:
 
-echo " - First container build and launch"
-cd "${INSTANCE_TARGET_DIR}"
-docker-compose down
-./scripts/image_build.sh "${INSTANCE_CONTAINER_NAME}" "${INSTANCE_RELEASE_NAME}"
-echo " - Bringing containers up ..."
-docker-compose up -d
+function rebuild_restart_containers {
+
+  cd "${INSTANCE_TARGET_DIR}"
+  docker-compose down
+  ./scripts/image_build.sh "${INSTANCE_CONTAINER_NAME}" "${INSTANCE_RELEASE_NAME}"
+  echo " - Bringing containers up ..."
+  docker-compose up -d
+
+}
+
+echo " - First container built and launch"
+rebuild_restart_containers
 
 #wait a while for containers being ready:
 echo " ~ sleep for 20 seconds, please stand by, as this is intented"
@@ -216,57 +312,16 @@ echo " ~ okay. 20 seconds have passed by..."
 echo " - handling SECRET_KEY_BASE affairs ..."
 INSTANCE_SECRET_KEY_BASE=$(docker run --rm "${INSTANCE_CONTAINER_NAME}:${INSTANCE_RELEASE_NAME}" bundle exec rake secret)
 
-echo " - assembling ${ENV_FILE_NAME}"
-cat "${SPINNER_TEMPLATES_DIR}tmpl.env" \
-    | sed "s/{{ INSTANCE_SECRET_KEY_BASE }}/${INSTANCE_SECRET_KEY_BASE}/g" \
-    | sed "s/{{ INSTANCE_NAME }}/${INSTANCE_NAME}/g" \
-    | sed "s/{{ INSTANCE_NAME_PREFIX }}/${INSTANCE_NAME_PREFIX}/g" \
-    | sed "s/{{ SPINNER_FQDN }}/${SPINNER_FQDN}/g" \
-    | sed "s/{{ SPINNER_BBB_FQDN }}/${SPINNER_BBB_FQDN}/g" \
-    | sed "s/{{ SPINNER_BBB_SECRET }}/${SPINNER_BBB_SECRET}/g" \
-    | sed "s/{{ INSTANCE_DB_PASSWORD }}/${INSTANCE_DB_PASSWORD}/g" \
-    | sed "s/{{ INSTANCE_SMTP_SERVER }}/${INSTANCE_SMTP_SERVER}/g" \
-    | sed "s/{{ INSTANCE_SMTP_PORT }}/${INSTANCE_SMTP_PORT}/g" \
-    | sed "s/{{ INSTANCE_SMTP_DOMAIN }}/${INSTANCE_SMTP_DOMAIN}/g" \
-    | sed "s/{{ INSTANCE_SMTP_USERNAME }}/${INSTANCE_SMTP_USERNAME}/g" \
-    | sed "s/{{ INSTANCE_SMTP_PASSWORD }}/${INSTANCE_SMTP_PASSWORD}/g" \
-    | sed "s/{{ INSTANCE_SMTP_STARTTLS_AUTO }}/${INSTANCE_SMTP_STARTTLS_AUTO}/g" \
-    | sed "s/{{ INSTANCE_SMTP_SENDER_NAME }}/${INSTANCE_SMTP_SENDER_NAME}/g" \
-    | sed "s/{{ INSTANCE_SMTP_SENDER_ADDRESS }}/${INSTANCE_SMTP_SENDER_ADDRESS}/g" \
-    | sed "s/{{ INSTANCE_HTML5_CLIENT_CSS_URL }}/\"${INSTANCE_HTML5_CLIENT_CSS_URL}\"/g" \
-    | sed "s/{{ INSTANCE_HTML5_CLIENT_LOGO_IMAGE_URL }}/\"${INSTANCE_HTML5_CLIENT_LOGO_IMAGE_URL}\"/g" \
-    | sed "s/{{ SPINNER_NEELZ_EMAIL }}/\"${SPINNER_NEELZ_EMAIL}\"/g" \
-    | sed "s/{{ SPINNER_NEELZ_EMAIL_PASSWORD }}/\"${SPINNER_NEELZ_EMAIL_PASSWORD}\"/g" \
-    | sed "s/{{ SPINNER_ISHARE_BASE_URL }}/\"${SPINNER_ISHARE_BASE_URL}\"/g" \
-    | sed "s/{{ INSTANCE_MCU_PREFIX }}/\"${INSTANCE_MCU_PREFIX}\"/g" \
-    | sed "s/{{ INSTANCE_MCU_MOD_PREFIX }}/\"${INSTANCE_MCU_MOD_PREFIX}\"/g" \
-    | sed "s/{{ INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE }}/\"${INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE}\"/g" \
-    | sed "s/{{ INSTANCE_LOGO_IMAGE_URL }}/\"${INSTANCE_LOGO_IMAGE_URL}\"/g" \
-    | sed "s/{{ INSTANCE_LOGO_IMAGE_EMAIL_URL }}/\"${INSTANCE_LOGO_IMAGE_EMAIL_URL}\"/g" \
-    | sed "s/{{ INSTANCE_DEFAULT_PRESENTATION_URL }}/\"${INSTANCE_DEFAULT_PRESENTATION_URL}\"/g" \
-    > "${ENV_FILE_NAME}"
-
-echo " - assembling ${VARIABLES_SCSS_FILE_NAME}"
-cat "${SPINNER_TEMPLATES_DIR}assets/stylesheets/_variables.tmpl.scss" \
-    | sed "s/{{ INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE }}/\"${INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE}\"/g" \
-    | sed "s/{{ INSTANCE_LOGO_IMAGE_URL }}/\"${INSTANCE_LOGO_IMAGE_URL}\"/g" \
-    | sed "s/{{ INSTANCE_LOGO_WITH_TEXT_IMAGE_URL }}/\"${INSTANCE_LOGO_WITH_TEXT_IMAGE_URL}\"/g" \
-    > "${VARIABLES_SCSS_FILE_NAME}"
+assemble_env_file
+assemble_variables_scss_file
 
 # rebuild container
 echo " - stop, rebuild and restart containers..."
-cd "${INSTANCE_TARGET_DIR}"
-docker-compose down
-./scripts/image_build.sh "${INSTANCE_CONTAINER_NAME}" "${INSTANCE_RELEASE_NAME}"
-docker-compose up -d
+rebuild_restart_containers
 
 # nginx configuration
 echo " ~ NGINX configuration..."
-echo " - assembling ${NGINX_CONF_FILE_NAME}"
-cat "${SPINNER_TEMPLATES_DIR}tmpl.nginx.conf" \
-    | sed "s/{{ INSTANCE_NAME }}/${INSTANCE_NAME}/g" \
-    | sed "s/{{ INSTANCE_PORT }}/${INSTANCE_PORT}/g" \
-    > "${NGINX_CONF_FILE_NAME}"
+assemble_nginx_conf_file
 
 echo " - reloading nginx"
 systemctl reload nginx
@@ -279,7 +334,7 @@ echo " ~ Initializing first user(s) for new instance"
 echo " - admin :: ${ADMIN_NAME} <${ADMIN_EMAIL}> and PW: ${ADMIN_PASSWORD}"
 docker exec "${INSTANCE_CONTAINER_NAME}" bundle exec rake user:create["${ADMIN_NAME}","${ADMIN_EMAIL}","${ADMIN_PASSWORD}","admin"]
 
-# 2. neelz user if desired
+# 2. neelz user if appropriate
 if [ "${WITH_NEELZ_LAYER_SUPPORT}" = "true" ]; then
   NEELZ_USER_NAME="°°${INSTANCE_NAME}°(neelZ)°°"
   NEELZ_USER_PASSWORD=$(openssl rand -hex 16)
