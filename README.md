@@ -1,6 +1,8 @@
-# spinner\**im*\*netZ*\*
+# spinner\**im*\*net*Z*\*
 
-will come with a REST-like API
+simplify the deployment and management of n* coexisting bigbluebutton/greenlight (-derived) instances on a single server machine
+
+... will come with a REST-like API
   
 °° work in progress (just started) °°
 
