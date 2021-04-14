@@ -1,0 +1,32 @@
+// Declare all variables here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+$background-image-landing-page: url('{{ INSTANCE_BACKGROUND_IMAGE_URL_LANDING_PAGE }}');
+
+$logo-url: url('{{ INSTANCE_LOGO_IMAGE_URL }}');
+$logo-with-text-url: url('{{ INSTANCE_LOGO_WITH_TEXT_IMAGE_URL }}');
+
+$background-color: #94948F;
+$background-color-wrapper: white;
+$error-background-color: #EFE6E6;
+$header-background-color: black;
+$footer-background-color: $header-background-color;
+$button-color-blue: #467FCF;
+
+$cookies-banner-color: white;
+$cookies-banner-background-color: #467FCF;
+$cookies-agree-button-color: inherit;
+$cookies-agree-button-background-color: green;
+
+$main-text-color: white;
+$main-text-text-shadow: 8px 6px 5px black;
+$main-text-font-weight: bold;
+
+$header-height: 46px;
+$footer-height: 40px;
+
+$client-viewport-side-border: 8px solid $header-background-color;
+
+$width-logo: 125px;
+

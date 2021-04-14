@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  app:
+    entrypoint: [bin/start]
+    image: {{ INSTANCE_CONTAINER_NAME }}:{{ INSTANCE_RELEASE_NAME }}
+    container_name: {{ INSTANCE_CONTAINER_NAME }}
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:{{ INSTANCE_PORT }}:80
+# When using external logging
+#    logging:
+#      driver: $LOG_DRIVER
+#      options:
+#        syslog-address: $LOG_ADDRESS
+#        tag: $LOG_TAG
+    volumes:
+      - ./log:/usr/src/app/log
+      - ./storage:/usr/src/app/storage
+# When using sqlite3 as the database
+#      - ./db/production:/usr/src/app/db/production
+# When using postgresql as the database
+    links:
+      - db
+  db:
+    image: postgres:{{ POSTGRES_RELEASE }}
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:{{ INSTANCE_DB_PORT }}:5432
+    volumes:
+      - ./db/production:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD={{ INSTANCE_DB_PASSWORD }}
