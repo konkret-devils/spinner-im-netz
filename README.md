@@ -1,1 +1,1 @@
-# konkret-spinner
+# spinner im netz
