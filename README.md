@@ -1,4 +1,4 @@
-# spinner\**im*\*netz
+# spinner\**im*\*net\**z*\*
 
 will come with a REST-like API
   
